@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>äccord // vogue</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,400;1,700&family=Inter:wght@300;500&display=swap');
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --vogue-black: #121212;
+            --vogue-gray: #a1a1a1;
+            --vogue-white: #ffffff;
+        }
+
+        body {
+            background: #fdfdfd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .vogue-card {
+            width: 340px;
+            background: transparent;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .vogue-artwork {
+            width: 260px;
+            height: 260px;
+            margin-bottom: 35px;
+            overflow: hidden;
+            background: #f4f4f4;
+        }
+
+        .vogue-artwork img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+        }
+
+        /* MARQUEE TITLE (Slow & Elegant) */
+        .vogue-title-mask {
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .vogue-title {
+            font-family: 'Bodoni Moda', serif;
+            font-style: italic;
+            font-size: 2.2rem;
+            margin: 0;
+            display: inline-block;
+            padding-left: 100%;
+            animation: vogue-marquee 25s linear infinite;
+            color: var(--vogue-black);
+        }
+
+        @keyframes vogue-marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .vogue-timestamp {
+            font-size: 0.55rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--vogue-gray);
+            margin-top: 15px; /* Spaced out since artist is gone */
+        }
+
+        .vogue-visualizer {
+            display: flex;
+            gap: 14px;
+            height: 35px;
+            margin: 35px 0;
+            align-items: flex-end;
+        }
+
+        .bar {
+            width: 1.2px;
+            height: 5px;
+            background: var(--vogue-black);
+        }
+
+        @keyframes vogue-bounce {
+            0%, 100% { height: 5px; }
+            50% { height: 35px; }
+        }
+
+        .is-playing .bar { animation: vogue-bounce 0.8s infinite ease-in-out; }
+        .is-playing .bar:nth-child(2) { animation-delay: 0.2s; }
+        .is-playing .bar:nth-child(3) { animation-delay: 0.4s; }
+
+        .vogue-controls { display: flex; gap: 8px; margin-bottom: 30px; }
+
+        .control-btn {
+            background: none;
+            border: none;
+            font-size: 0.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            color: var(--vogue-black);
+            padding: 10px;
+        }
+
+        .vogue-progress-container {
+            width: 70%;
+            height: 1px;
+            background: #eee;
+            position: relative;
+        }
+
+        .vogue-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--vogue-black);
+            transition: width 0.2s linear;
+        }
+
+        .chaos-toggle {
+            margin-top: 30px;
+            background: none;
+            border: none;
+            font-family: 'Bodoni Moda', serif;
+            font-style: italic;
+            font-size: 0.7rem;
+            color: var(--vogue-gray);
+            cursor: pointer;
+        }
+
+        @keyframes rainbow-flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 0% 100%; }
+        }
+
+        .chaos-on .bar {
+            background: linear-gradient(to bottom, #ff0000, #ffff00, #00ff00, #0000ff, #9400d3, #ff0000);
+            background-size: 100% 400%;
+        }
+
+        .is-playing.chaos-on .bar { 
+            animation: vogue-bounce 0.8s infinite ease-in-out, rainbow-flow 3s linear infinite; 
+        }
+
+        .chaos-on .vogue-progress-fill {
+            background: linear-gradient(to right, #ff0000, #00ff00, #0000ff);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vogue-card">
+        <div class="vogue-artwork">
+            <img src="https://via.placeholder.com/400" alt="Artwork" id="albumArt">
+        </div>
+
+        <div class="vogue-title-mask">
+            <h1 class="vogue-title" id="titleText">untitled_01</h1>
+        </div>
+
+        <p class="vogue-timestamp" id="timeText">0:00 — 0:00</p>
+
+        <div class="vogue-visualizer" id="visualizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <div class="vogue-controls">
+            <input type="file" id="fileInput" accept="audio/*" style="display:none;" multiple>
+            <button id="browseBtn" class="control-btn">BROWSE</button>
+            <button id="prevBtn" class="control-btn">PREV</button>
+            <button id="playBtn" class="control-btn">PLAY</button>
+            <button id="nextBtn" class="control-btn">NEXT</button>
+        </div>
+
+        <div class="vogue-progress-container">
+            <div id="progressBar" class="vogue-progress-fill"></div>
+        </div>
+
+        <button id="chaosTrigger" class="chaos-toggle">chaos: off</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = new Audio();
+            const playBtn = document.getElementById('playBtn');
+            const browseBtn = document.getElementById('browseBtn');
+            const fileInput = document.getElementById('fileInput');
+            const visualizer = document.getElementById('visualizer');
+            const progressBar = document.getElementById('progressBar');
+            const timeText = document.getElementById('timeText');
+            const titleText = document.getElementById('titleText');
+            const chaosBtn = document.getElementById('chaosTrigger');
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+
+            let playlist = [];
+            let currentIndex = 0;
+            let isPlaying = false;
+            let isChaos = false;
+
+            function loadTrack(index) {
+                if (playlist.length > 0) {
+                    const file = playlist[index];
+                    audio.src = URL.createObjectURL(file);
+                    titleText.textContent = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+                    if (isPlaying) audio.play();
+                }
+            }
+
+            browseBtn.onclick = () => fileInput.click();
+
+            fileInput.onchange = function() {
+                if (this.files.length > 0) {
+                    playlist = Array.from(this.files);
+                    currentIndex = 0;
+                    loadTrack(currentIndex);
+                }
+            };
+
+            playBtn.onclick = () => {
+                if (!audio.src) return;
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    audio.play();
+                    playBtn.textContent = "PAUSE";
+                    visualizer.classList.add('is-playing');
+                } else {
+                    audio.pause();
+                    playBtn.textContent = "PLAY";
+                    visualizer.classList.remove('is-playing');
+                }
+            };
+
+            nextBtn.onclick = () => {
+                if (playlist.length === 0) return;
+                currentIndex = (currentIndex + 1) % playlist.length;
+                loadTrack(currentIndex);
+            };
+
+            prevBtn.onclick = () => {
+                if (playlist.length === 0) return;
+                currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+                loadTrack(currentIndex);
+            };
+
+            audio.ontimeupdate = () => {
+                if (!isNaN(audio.duration)) {
+                    const percent = (audio.currentTime / audio.duration) * 100;
+                    progressBar.style.width = percent + "%";
+                    const cur = Math.floor(audio.currentTime / 60) + ":" + Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+                    const dur = Math.floor(audio.duration / 60) + ":" + Math.floor(audio.duration % 60).toString().padStart(2, '0');
+                    timeText.textContent = `${cur} — ${dur}`;
+                }
+            };
+
+            chaosBtn.onclick = () => {
+                isChaos = !isChaos;
+                isChaos ? visualizer.classList.add('chaos-on') : visualizer.classList.remove('chaos-on');
+                chaosBtn.textContent = isChaos ? "chaos: on" : "chaos: off";
+            };
+
+            audio.onended = () => {
+                isPlaying = false;
+                playBtn.textContent = "PLAY";
+                visualizer.classList.remove('is-playing');
+            };
+        });
+    </script>
+</body>
+</html>
