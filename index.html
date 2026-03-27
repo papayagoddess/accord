@@ -202,7 +202,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const audio = new Audio();
+            let audio = new Audio();
             const playBtn = document.getElementById('playBtn');
             const browseBtn = document.getElementById('browseBtn');
             const fileInput = document.getElementById('fileInput');
@@ -217,14 +217,30 @@
             let playlist = [];
             let currentIndex = 0;
             let isPlaying = false;
-            let isChaos = false;
 
             function loadTrack(index) {
                 if (playlist.length > 0) {
-                    const file = playlist[index];
-                    audio.src = URL.createObjectURL(file);
+                    if (index >= playlist.length) index = 0;
+                    if (index < 0) index = playlist.length - 1;
+                    currentIndex = index;
+
+                    audio.pause();
+                    audio.src = ""; 
+                    audio.load();
+
+                    const file = playlist[currentIndex];
+                    const fileURL = URL.createObjectURL(file);
+                    audio.src = fileURL;
+
                     titleText.textContent = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
-                    if (isPlaying) audio.play();
+
+                    if (isPlaying) {
+                        audio.play().catch(err => {
+                            isPlaying = false;
+                            playBtn.textContent = "PLAY";
+                            visualizer.classList.remove('is-playing');
+                        });
+                    }
                 }
             }
 
@@ -234,34 +250,34 @@
                 if (this.files.length > 0) {
                     playlist = Array.from(this.files);
                     currentIndex = 0;
+                    isPlaying = false;
                     loadTrack(currentIndex);
                 }
             };
 
             playBtn.onclick = () => {
-                if (!audio.src) return;
-                isPlaying = !isPlaying;
-                if (isPlaying) {
+                if (playlist.length === 0) return;
+                if (audio.paused) {
                     audio.play();
+                    isPlaying = true;
                     playBtn.textContent = "PAUSE";
                     visualizer.classList.add('is-playing');
                 } else {
                     audio.pause();
+                    isPlaying = false;
                     playBtn.textContent = "PLAY";
                     visualizer.classList.remove('is-playing');
                 }
             };
 
-            nextBtn.onclick = () => {
-                if (playlist.length === 0) return;
-                currentIndex = (currentIndex + 1) % playlist.length;
-                loadTrack(currentIndex);
+            nextBtn.onclick = (e) => {
+                e.preventDefault();
+                if (playlist.length > 1) loadTrack(currentIndex + 1);
             };
 
-            prevBtn.onclick = () => {
-                if (playlist.length === 0) return;
-                currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
-                loadTrack(currentIndex);
+            prevBtn.onclick = (e) => {
+                e.preventDefault();
+                if (playlist.length > 1) loadTrack(currentIndex - 1);
             };
 
             audio.ontimeupdate = () => {
@@ -274,16 +290,19 @@
                 }
             };
 
-            chaosBtn.onclick = () => {
-                isChaos = !isChaos;
-                isChaos ? visualizer.classList.add('chaos-on') : visualizer.classList.remove('chaos-on');
-                chaosBtn.textContent = isChaos ? "chaos: on" : "chaos: off";
+            audio.onended = () => {
+                if (playlist.length > 1) {
+                    loadTrack(currentIndex + 1);
+                } else {
+                    isPlaying = false;
+                    playBtn.textContent = "PLAY";
+                    visualizer.classList.remove('is-playing');
+                }
             };
 
-            audio.onended = () => {
-                isPlaying = false;
-                playBtn.textContent = "PLAY";
-                visualizer.classList.remove('is-playing');
+            chaosBtn.onclick = () => {
+                visualizer.classList.toggle('chaos-on');
+                chaosBtn.textContent = visualizer.classList.contains('chaos-on') ? "chaos: on" : "chaos: off";
             };
 
             if('serviceWorker' in navigator) {
@@ -292,4 +311,5 @@
         });
     </script>
 </body>
-</html>
+                </html>
+                                                                  
