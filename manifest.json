@@ -1,20 +1,16 @@
 {
   "name": "äccord",
   "short_name": "äccord",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fdfdfd",
   "theme_color": "#121212",
   "icons": [
     {
       "src": "title.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "title.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
