@@ -218,28 +218,37 @@
             browseBtn.onclick = () => fileInput.click();
 
             fileInput.onchange = function(e) {
-                playlist = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
+                // Get all files and filter for audio
+                const files = Array.from(e.target.files);
+                playlist = files.filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|wav|ogg|m4a)$/i));
+                
                 if (playlist.length > 0) {
                     currentIndex = 0;
-                    loadAndPlay(0);
+                    loadTrack(0);
                 }
             };
 
-            function loadAndPlay(index) {
+            function loadTrack(index) {
                 if (playlist.length === 0) return;
-                
+
+                // Ensure the index wraps around correctly
                 currentIndex = (index + playlist.length) % playlist.length;
+                
                 const file = playlist[currentIndex];
                 
+                // Reset audio state
                 audio.pause();
                 audio.src = URL.createObjectURL(file);
+                
+                // Update UI text
                 titleText.textContent = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
                 
+                // Attempt to play immediately (User-gesture required usually)
                 audio.play().then(() => {
                     playBtn.textContent = "PAUSE";
                     visualizer.classList.add('is-playing');
                 }).catch(err => {
-                    console.log("Playback error:", err);
+                    console.warn("Playback requires manual start");
                     playBtn.textContent = "PLAY";
                     visualizer.classList.remove('is-playing');
                 });
@@ -258,14 +267,19 @@
                 }
             };
 
+            // DIRECT INCREMENT LOGIC
             document.getElementById('nextBtn').onclick = (e) => {
                 e.preventDefault();
-                loadAndPlay(currentIndex + 1);
+                if (playlist.length > 0) {
+                    loadTrack(currentIndex + 1);
+                }
             };
 
             document.getElementById('prevBtn').onclick = (e) => {
                 e.preventDefault();
-                loadAndPlay(currentIndex - 1);
+                if (playlist.length > 0) {
+                    loadTrack(currentIndex - 1);
+                }
             };
 
             audio.ontimeupdate = () => {
@@ -278,7 +292,10 @@
                 }
             };
 
-            audio.onended = () => loadAndPlay(currentIndex + 1);
+            // AUTO-SKIP
+            audio.onended = () => {
+                loadTrack(currentIndex + 1);
+            };
 
             chaosBtn.onclick = () => {
                 visualizer.classList.toggle('chaos-on');
@@ -291,5 +308,5 @@
         });
     </script>
 </body>
-                </html>
-                
+    </html>
+    
