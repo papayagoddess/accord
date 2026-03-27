@@ -186,7 +186,7 @@
         </div>
 
         <div class="vogue-controls">
-            <input type="file" id="fileInput" accept="audio/*" style="display:none;" multiple>
+            <input type="file" id="fileInput" webkitdirectory directory multiple style="display:none;">
             <button id="browseBtn" class="control-btn">BROWSE</button>
             <button id="prevBtn" class="control-btn">PREV</button>
             <button id="playBtn" class="control-btn">PLAY</button>
@@ -202,7 +202,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let audio = new Audio();
+            const audio = new Audio();
             const playBtn = document.getElementById('playBtn');
             const browseBtn = document.getElementById('browseBtn');
             const fileInput = document.getElementById('fileInput');
@@ -211,73 +211,61 @@
             const timeText = document.getElementById('timeText');
             const titleText = document.getElementById('titleText');
             const chaosBtn = document.getElementById('chaosTrigger');
-            const nextBtn = document.getElementById('nextBtn');
-            const prevBtn = document.getElementById('prevBtn');
 
             let playlist = [];
             let currentIndex = 0;
-            let isPlaying = false;
-
-            function loadTrack(index) {
-                if (playlist.length > 0) {
-                    if (index >= playlist.length) index = 0;
-                    if (index < 0) index = playlist.length - 1;
-                    currentIndex = index;
-
-                    audio.pause();
-                    audio.src = ""; 
-                    audio.load();
-
-                    const file = playlist[currentIndex];
-                    const fileURL = URL.createObjectURL(file);
-                    audio.src = fileURL;
-
-                    titleText.textContent = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
-
-                    if (isPlaying) {
-                        audio.play().catch(err => {
-                            isPlaying = false;
-                            playBtn.textContent = "PLAY";
-                            visualizer.classList.remove('is-playing');
-                        });
-                    }
-                }
-            }
 
             browseBtn.onclick = () => fileInput.click();
 
-            fileInput.onchange = function() {
-                if (this.files.length > 0) {
-                    playlist = Array.from(this.files);
+            fileInput.onchange = function(e) {
+                playlist = Array.from(e.target.files).filter(file => file.type.startsWith('audio/'));
+                if (playlist.length > 0) {
                     currentIndex = 0;
-                    isPlaying = false;
-                    loadTrack(currentIndex);
+                    loadAndPlay(0);
                 }
             };
 
-            playBtn.onclick = () => {
+            function loadAndPlay(index) {
                 if (playlist.length === 0) return;
+                
+                currentIndex = (index + playlist.length) % playlist.length;
+                const file = playlist[currentIndex];
+                
+                audio.pause();
+                audio.src = URL.createObjectURL(file);
+                titleText.textContent = file.name.replace(/\.[^/.]+$/, "").toLowerCase();
+                
+                audio.play().then(() => {
+                    playBtn.textContent = "PAUSE";
+                    visualizer.classList.add('is-playing');
+                }).catch(err => {
+                    console.log("Playback error:", err);
+                    playBtn.textContent = "PLAY";
+                    visualizer.classList.remove('is-playing');
+                });
+            }
+
+            playBtn.onclick = () => {
+                if (!audio.src) return;
                 if (audio.paused) {
                     audio.play();
-                    isPlaying = true;
                     playBtn.textContent = "PAUSE";
                     visualizer.classList.add('is-playing');
                 } else {
                     audio.pause();
-                    isPlaying = false;
                     playBtn.textContent = "PLAY";
                     visualizer.classList.remove('is-playing');
                 }
             };
 
-            nextBtn.onclick = (e) => {
+            document.getElementById('nextBtn').onclick = (e) => {
                 e.preventDefault();
-                if (playlist.length > 1) loadTrack(currentIndex + 1);
+                loadAndPlay(currentIndex + 1);
             };
 
-            prevBtn.onclick = (e) => {
+            document.getElementById('prevBtn').onclick = (e) => {
                 e.preventDefault();
-                if (playlist.length > 1) loadTrack(currentIndex - 1);
+                loadAndPlay(currentIndex - 1);
             };
 
             audio.ontimeupdate = () => {
@@ -290,15 +278,7 @@
                 }
             };
 
-            audio.onended = () => {
-                if (playlist.length > 1) {
-                    loadTrack(currentIndex + 1);
-                } else {
-                    isPlaying = false;
-                    playBtn.textContent = "PLAY";
-                    visualizer.classList.remove('is-playing');
-                }
-            };
+            audio.onended = () => loadAndPlay(currentIndex + 1);
 
             chaosBtn.onclick = () => {
                 visualizer.classList.toggle('chaos-on');
@@ -312,4 +292,4 @@
     </script>
 </body>
                 </html>
-                                                                  
+                
